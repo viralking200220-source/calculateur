@@ -1,0 +1,301 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Boîte à Outils Commerciale</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#27ae60">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            max-width: 700px;
+            margin: 20px auto;
+            padding: 15px;
+        }
+        .calculateur-box {
+            background-color: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #27ae60;
+            padding-bottom: 10px;
+            text-align: center;
+            margin-top: 0;
+            font-size: 1.6em;
+        }
+        h2 {
+            color: #2980b9;
+            font-size: 1.15em;
+            margin-top: 20px;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .tab-button {
+            flex: 1;
+            padding: 10px 5px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-size: 0.85em;
+            font-weight: bold;
+            color: #7f8c8d;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .tab-button.active {
+            color: #27ae60;
+            border-bottom-color: #27ae60;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            flex: 1;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #34495e;
+            font-size: 0.85em;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 0.95em;
+            box-sizing: border-box;
+        }
+        .btn {
+            width: 100%;
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 1em;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        .btn-calculer { background-color: #27ae60; }
+        .btn-calculer-inverse { background-color: #2980b9; }
+        .btn-calculer-seuil { background-color: #8e44ad; }
+        .btn-export { background-color: #7f8c8d; margin-top: 15px; }
+        .resultats {
+            margin-top: 25px;
+            border-top: 2px dashed #bdc3c7;
+            padding-top: 15px;
+            display: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+            font-size: 0.85em;
+        }
+        th {
+            background-color: #f8f9fa;
+        }
+        .valeur-accent {
+            font-weight: bold;
+            color: #27ae60;
+        }
+        @media print {
+            .tabs, input, button, .btn { display: none !important; }
+            .resultats { display: block !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calculateur-box">
+        <h1>Boîte à Outils Commerciale</h1>
+        
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('ongletMarge')">1. Calcul Marge</button>
+            <button class="tab-button" onclick="switchTab('ongletInverse')">2. Calcul Inverse</button>
+            <button class="tab-button" onclick="switchTab('ongletSeuil')">3. Seuil Rentabilité</button>
+        </div>
+
+        <div id="ongletMarge" class="tab-content active">
+            <h2>Calculer un prix à partir du Coût d'Achat</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="coutAchat">Coût d'achat :</label>
+                    <input type="number" id="coutAchat" placeholder="Ex: 600">
+                </div>
+                <div class="form-group">
+                    <label for="tauxMarque">Taux de marque (%) :</label>
+                    <input type="number" id="tauxMarque" placeholder="Ex: 40">
+                </div>
+            </div>
+            <button class="btn btn-calculer" onclick="calculerMargeDirecte()">Calculer les indicateurs 📊</button>
+            
+            <div id="resMargeDirecte" class="resultats">
+                <h2>Résultats</h2>
+                <table>
+                    <tr><th>Indicateur</th><th>Valeur</th></tr>
+                    <tr><td>Prix de vente HT</td><td id="margeDirecte_PVHT" class="valeur-accent">-</td></tr>
+                    <tr><td>Marge brute</td><td id="margeDirecte_MB" class="valeur-accent">-</td></tr>
+                    <tr><td>TVA (18%)</td><td id="margeDirecte_TVA">-</td></tr>
+                    <tr><td>Prix de vente TTC</td><td id="margeDirecte_PVTTC" style="font-weight:bold; color:#c0392b;">-</td></tr>
+                </table>
+                <button class="btn btn-export" onclick="window.print()">Imprimer / PDF 🖨️</button>
+            </div>
+        </div>
+
+        <div id="ongletInverse" class="tab-content">
+            <h2>Trouver les taux à partir du Prix de Vente</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="invCoutAchat">Coût d'achat :</label>
+                    <input type="number" id="invCoutAchat" placeholder="Ex: 600">
+                </div>
+                <div class="form-group">
+                    <label for="invPrixVente">Prix de vente HT :</label>
+                    <input type="number" id="invPrixVente" placeholder="Ex: 1000">
+                </div>
+            </div>
+            <button class="btn btn-calculer-inverse" onclick="calculerMargeInverse()">Trouver les taux 🔍</button>
+
+            <div id="resMargeInverse" class="resultats">
+                <h2>Analyse des taux</h2>
+                <table>
+                    <tr><th>Indicateur</th><th>Valeur</th></tr>
+                    <tr><td>Marge brute</td><td id="inv_MB" class="valeur-accent">-</td></tr>
+                    <tr><td>Taux de marque</td><td id="inv_TMarque" class="valeur-accent">-</td></tr>
+                    <tr><td>Taux de marge</td><td id="inv_TMarge">-</td></tr>
+                    <tr><td>Coefficient multiplicateur (TTC)</td><td id="inv_Coef">-</td></tr>
+                </table>
+                <button class="btn btn-export" onclick="window.print()">Imprimer / PDF 🖨️</button>
+            </div>
+        </div>
+
+        <div id="ongletSeuil" class="tab-content">
+            <h2>Seuil de Rentabilité & Point Mort</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="seuilChiffre">CA prévu :</label>
+                    <input type="number" id="seuilChiffre" placeholder="Ex: 10000000">
+                </div>
+                <div class="form-group">
+                    <label for="seuilVar">Charges Variables :</label>
+                    <input type="number" id="seuilVar" placeholder="Ex: 6000000">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="seuilFixe">Charges Fixes :</label>
+                <input type="number" id="seuilFixe" placeholder="Ex: 2500000">
+            </div>
+            <button class="btn btn-calculer-seuil" onclick="calculerSeuil()">Évaluer la viabilité 📈</button>
+
+            <div id="resSeuil" class="resultats">
+                <h2>Indicateurs</h2>
+                <table>
+                    <tr><th>Indicateur financier</th><th>Valeur</th></tr>
+                    <tr><td>Marge / Coûts Var. (MCV)</td><td id="seuil_MCV" class="valeur-accent">-</td></tr>
+                    <tr><td>Taux de MCV</td><td id="seuil_TMCV" class="valeur-accent">-</td></tr>
+                    <tr><td>Seuil de Rentabilité (CA min)</td><td id="seuil_SR" style="font-weight:bold; color:#e74c3c;">-</td></tr>
+                    <tr><td>Résultat net simulé</td><td id="seuil_Resultat">-</td></tr>
+                </table>
+                <button class="btn btn-export" onclick="window.print()">Imprimer / PDF 🖨️</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabId) {
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(c => c.classList.remove('active'));
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        function calculerMargeDirecte() {
+            const coutAchat = parseFloat(document.getElementById('coutAchat').value);
+            const tauxMarque = parseFloat(document.getElementById('tauxMarque').value);
+            if (isNaN(coutAchat) || isNaN(tauxMarque) || coutAchat <= 0 || tauxMarque < 0 || tauxMarque >= 100) {
+                alert("Veuillez saisir des valeurs valides.");
+                return;
+            }
+            const prixHT = coutAchat / (1 - (tauxMarque / 100));
+            const marge = prixHT - coutAchat;
+            const tva = prixHT * 0.18;
+            const prixTTC = prixHT + tva;
+            document.getElementById('margeDirecte_PVHT').textContent = prixHT.toFixed(2);
+            document.getElementById('margeDirecte_MB').textContent = marge.toFixed(2);
+            document.getElementById('margeDirecte_TVA').textContent = tva.toFixed(2);
+            document.getElementById('margeDirecte_PVTTC').textContent = prixTTC.toFixed(2);
+            document.getElementById('resMargeDirecte').style.display = 'block';
+        }
+
+        function calculerMargeInverse() {
+            const coutAchat = parseFloat(document.getElementById('invCoutAchat').value);
+            const prixVente = parseFloat(document.getElementById('invPrixVente').value);
+            if (isNaN(coutAchat) || isNaN(prixVente) || coutAchat <= 0 || prixVente <= coutAchat) {
+                alert("Le prix de vente doit être supérieur au coût d'achat.");
+                return;
+            }
+            const marge = prixVente - coutAchat;
+            const tauxMarque = (marge / prixVente) * 100;
+            const tauxMarge = (marge / coutAchat) * 100;
+            const tva = prixVente * 0.18;
+            const coef = (prixVente + tva) / coutAchat;
+            document.getElementById('inv_MB').textContent = marge.toFixed(2);
+            document.getElementById('inv_TMarque').textContent = tauxMarque.toFixed(2) + " %";
+            document.getElementById('inv_TMarge').textContent = tauxMarge.toFixed(2) + " %";
+            document.getElementById('inv_Coef').textContent = coef.toFixed(3);
+            document.getElementById('resMargeInverse').style.display = 'block';
+        }
+
+        function calculerSeuil() {
+            const ca = parseFloat(document.getElementById('seuilChiffre').value);
+            const cv = parseFloat(document.getElementById('seuilVar').value);
+            const cf = parseFloat(document.getElementById('seuilFixe').value);
+            if (isNaN(ca) || isNaN(cv) || isNaN(cf) || ca <= 0 || cv < 0 || cf < 0 || cv >= ca) {
+                alert("Données financières incohérentes.");
+                return;
+            }
+            const mcv = ca - cv;
+            const tmcv = mcv / ca;
+            const sr = cf / tmcv;
+            const resultat = mcv - cf;
+            document.getElementById('seuil_MCV').textContent = mcv.toFixed(2);
+            document.getElementById('seuil_TMCV').textContent = (tmcv * 100).toFixed(2) + " %";
+            document.getElementById('seuil_SR').textContent = sr.toFixed(2);
+            document.getElementById('seuil_Resultat').textContent = resultat.toFixed(2);
+            document.getElementById('resSeuil').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
